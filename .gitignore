@@ -2,6 +2,13 @@
 .gradle/
 build/
 
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
 # Local configuration file (sdk path, etc)
 local.properties
 
