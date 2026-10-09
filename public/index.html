@@ -13,12 +13,15 @@
     @media(max-width:900px){.hero{grid-template-columns:1fr .75fr;gap:24px}.hero-photo{height:265px}.searchbox{grid-template-columns:1fr 1fr 1fr auto}.searchfield:nth-child(4){display:none}.grid{grid-template-columns:repeat(2,1fr)}.why{grid-template-columns:1fr}.nav{gap:17px}}
     @media(max-width:620px){.wrap{width:min(100% - 28px,480px)}.topbar{height:66px}.brand{font-size:21px}.nav{display:none}.host{padding:9px 12px;font-size:12px}.hero{padding:38px 0 23px;grid-template-columns:1fr;gap:22px}.hero h1{font-size:43px;margin-top:15px}.hero p{font-size:14px}.hero-photo{height:225px;border-radius:22px}.searchbox{grid-template-columns:1fr 1fr;gap:3px;padding:9px;margin-bottom:33px}.searchfield{padding:8px 10px}.searchfield:nth-child(2){border-left:0}.searchbtn{grid-column:1/-1;justify-content:center;padding:13px;margin-top:6px}.section-head{align-items:start}.section-head h2{font-size:23px}.section-head p{font-size:12px}.sort{display:none}.filters{flex-wrap:nowrap;overflow:auto;padding-bottom:7px}.chip{white-space:nowrap}.grid{grid-template-columns:1fr;gap:15px}.card-image{height:235px}.why{padding:22px;margin:45px 0 35px}.why h2{font-size:22px}.perks{grid-template-columns:1fr}.perk{display:grid;grid-template-columns:42px 1fr;column-gap:10px;align-items:center}.perk-icon{grid-row:span 2;margin:0}.perk small{margin-top:1px}.footer{gap:14px;flex-wrap:wrap}.footer .brand{font-size:17px}}
   </style>
+  <link rel="stylesheet" href="auth.css">
+  <script src="supabase-config.js" defer></script>
+  <script src="auth-client.js" defer></script>
 </head>
 <body>
   <header class="wrap topbar">
     <a class="brand" href="#top" aria-label="دار - الرئيسية"><span class="brandmark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></svg></span>دار</a>
     <nav class="nav"><a href="#stays">أماكن الإقامة</a><a href="#why">لماذا دار؟</a><a href="#footer">عن المنصة</a></nav>
-    <div class="nav-actions"><button class="login" id="loginBtn">تسجيل الدخول</button><button class="host" id="hostBtn">اعرض عقارك</button></div>
+    <div class="nav-actions"><button class="login auth-trigger" id="loginBtn" data-auth-trigger type="button">تسجيل الدخول</button><button class="host" id="hostBtn">اعرض عقارك</button></div>
   </header>
   <main id="top" class="wrap">
     <section class="hero">
