@@ -1,11 +1,13 @@
 -- دار MVP schema draft — not applied to any remote database.
 -- Temporary product assumptions: Saudi short stays, SAR, host approval before payment.
 -- Review and test against a disposable local Supabase stack before deployment.
+-- Self-publication is permitted only for isolated test data; do not expose this
+-- schema to public hosts until listing moderation/approval is implemented.
 
 create extension if not exists btree_gist with schema extensions;
 
 create type public.listing_status as enum ('draft', 'published', 'paused', 'archived');
-create type public.booking_status as enum ('pending', 'approved', 'rejected', 'cancelled');
+create type public.booking_status as enum ('pending', 'approved', 'rejected');
 
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
