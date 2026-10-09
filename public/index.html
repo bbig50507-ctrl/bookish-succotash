@@ -1,17 +1,86 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!doctype html>
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#667eea" />
-    <meta
-      name="description"
-      content="منصة عقارات وحجوزات مع نظام دفع متكامل"
-    />
-    <title>منصة العقارات</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f7f2" />
+    <meta name="description" content="اكتشف أماكن إقامة مريحة. واجهة تجريبية عربية للحجوزات، جاهزة للعرض على الهاتف." />
+    <title>مساكن — اكتشف مكان إقامتك</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <noscript>تحتاج إلى تفعيل JavaScript لتشغيل هذا التطبيق.</noscript>
-    <div id="root"></div>
+    <a class="skip-link" href="#listings">تجاوز إلى أماكن الإقامة</a>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="مساكن — الصفحة الرئيسية">
+        <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 3.8c-8.2 0-14.3 6.1-14.3 14.1 0 10 14.3 19.3 14.3 19.3s14.3-9.3 14.3-19.3C34.3 9.9 28.2 3.8 20 3.8Z" fill="currentColor"/><circle cx="20" cy="18" r="5.3" fill="#fff"/></svg></span>
+        <span>مساكن</span>
+      </a>
+      <nav class="desktop-nav" aria-label="التنقل الرئيسي">
+        <a class="nav-link active" href="#listings">استكشف</a>
+        <a class="nav-link" href="#how-it-works">كيف تعمل</a>
+      </nav>
+      <div class="top-actions"><span class="demo-badge"><i></i> نسخة تجريبية</span><button class="profile-button" id="profile-button" type="button" aria-label="الملف الشخصي"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-3.4 3.2-5.4 7-5.4s6.4 2 7 5.4"/></svg></button></div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="hero-overline"><span></span> رحلتك تبدأ بمكان جميل</p>
+          <h1 id="hero-title">وين تحب<br /><em>تروح؟</em></h1>
+          <p class="hero-subtitle">اكتشف إقامة تناسب إيقاعك — من عطلة هادئة إلى مغامرة جديدة.</p>
+        </div>
+        <form class="search-panel" id="search-form">
+          <label class="search-field destination-field"><span class="field-label">إلى أين؟</span><span class="field-control"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="destination" name="destination" type="search" placeholder="مدينة أو نوع إقامة" autocomplete="off" /></span></label>
+          <label class="search-field"><span class="field-label">الوصول</span><span class="field-control"><input id="checkin" name="checkin" type="date" aria-label="تاريخ الوصول" /></span></label>
+          <label class="search-field"><span class="field-label">المغادرة</span><span class="field-control"><input id="checkout" name="checkout" type="date" aria-label="تاريخ المغادرة" /></span></label>
+          <label class="search-field guests-field"><span class="field-label">الضيوف</span><span class="field-control"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.3-2.8 2.2-4.5 5.5-4.5 1.5 0 2.7.4 3.6 1.1M16 11a2.5 2.5 0 1 0 0-5M15 15c3.4-.2 5.4 1.2 5.7 4"/></svg><select id="guests" name="guests" aria-label="عدد الضيوف"><option value="1">ضيف واحد</option><option value="2" selected>ضيفان</option><option value="3">3 ضيوف</option><option value="4">4 ضيوف</option><option value="5">5 ضيوف أو أكثر</option></select></span></label>
+          <button class="search-button" type="submit" aria-label="ابحث عن أماكن"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><span>ابحث</span></button>
+        </form>
+        <p class="demo-note"><span aria-hidden="true">ⓘ</span> الأماكن والأسعار توضيحية؛ لا يتوفر التحقق من التواريخ أو إتمام الحجز بعد.</p>
+      </section>
+
+      <section class="explore section-wrap" id="listings" aria-labelledby="listings-title">
+        <div class="explore-top">
+          <div><p class="section-eyebrow">اختر الأجواء التي تحبها</p><h2 id="listings-title">أماكن تستحق الرحلة</h2></div>
+          <button class="filter-button" id="clear-filters" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10m-7 5h4"/></svg> إعادة ضبط</button>
+        </div>
+        <div class="category-row" role="group" aria-label="تصفية حسب نوع الإقامة">
+          <button class="category active" type="button" data-category="all"><span class="category-icon">✳</span>الكل</button>
+          <button class="category" type="button" data-category="coast"><span class="category-icon">⌁</span>قرب البحر</button>
+          <button class="category" type="button" data-category="cabin"><span class="category-icon">⌂</span>أكواخ</button>
+          <button class="category" type="button" data-category="city"><span class="category-icon">▦</span>شقق مدينة</button>
+          <button class="category" type="button" data-category="family"><span class="category-icon">♡</span>للعائلات</button>
+        </div>
+        <div class="results-meta"><p id="results-count" aria-live="polite">أماكن مقترحة</p><button id="favorites-filter" class="favorites-filter" type="button"><span aria-hidden="true">♡</span> المفضلة فقط</button></div>
+        <div class="listing-grid" id="listing-grid" aria-live="polite"></div>
+        <div class="empty-state" id="empty-state" hidden><span class="empty-icon">⌕</span><h3>لم نجد مكانًا بهذه المواصفات</h3><p>جرّب كلمة بحث أخرى أو أزل بعض الفلاتر.</p><button type="button" id="reset-search" class="reset-button">عرض كل الأماكن</button></div>
+        <div class="load-more-wrap"><button class="load-more" type="button" id="show-all">شاهد كل الأماكن <span aria-hidden="true">↓</span></button></div>
+      </section>
+
+      <section class="how-section" id="how-it-works">
+        <div class="section-wrap how-inner">
+          <div class="how-title"><p class="section-eyebrow">خطوات بسيطة</p><h2>الطريق إلى<br /><em>إقامة أهدأ.</em></h2><p>استعرض المكان، راجع تفاصيله، ثم أتمّ الحجز عند تفعيل الخدمة.</p></div>
+          <div class="how-steps">
+            <article class="how-step"><span>01</span><div><h3>ابحث عن وجهتك</h3><p>استخدم الموقع والتواريخ وعدد الضيوف لتضييق الخيارات.</p></div><b aria-hidden="true">⌕</b></article>
+            <article class="how-step"><span>02</span><div><h3>استكشف التفاصيل</h3><p>تعرّف على نوع الإقامة والسعة وما يميز كل مكان.</p></div><b aria-hidden="true">⌂</b></article>
+            <article class="how-step"><span>03</span><div><h3>أكمل الحجز لاحقًا</h3><p>تأكيد الحجز والدفع يحتاجان إلى ربط قاعدة بيانات وخدمة دفع.</p></div><b aria-hidden="true">↗</b></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-note section-wrap"><span class="trust-icon">✓</span><div><h2>معلومة واضحة، تجربة أضمن</h2><p>الواجهة الحالية نموذج أولي فقط. لا تُدخل بيانات دفع أو معلومات شخصية؛ لا يوجد تسجيل دخول أو إرسال حجوزات في هذه النسخة.</p></div></section>
+    </main>
+
+    <footer class="footer"><div class="section-wrap footer-inner"><a class="brand footer-brand" href="#top"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 3.8c-8.2 0-14.3 6.1-14.3 14.1 0 10 14.3 19.3 14.3 19.3s14.3-9.3 14.3-19.3C34.3 9.9 28.2 3.8 20 3.8Z" fill="currentColor"/><circle cx="20" cy="18" r="5.3" fill="#fff"/></svg></span><span>مساكن</span></a><p>واجهة أولية لمشروع الحجوزات — بيانات وأماكن تجريبية.</p><a href="#top" class="top-link">إلى الأعلى ↑</a></div></footer>
+
+    <nav class="mobile-nav" aria-label="التنقل السفلي للهاتف"><a class="mobile-nav-item active" href="#listings"><span>⌕</span>استكشف</a><button class="mobile-nav-item" id="mobile-favorites" type="button"><span>♡</span>المفضلة</button><button class="mobile-nav-item" id="mobile-profile" type="button"><span>♙</span>حسابي</button></nav>
+
+    <dialog class="detail-dialog" id="detail-dialog" aria-labelledby="dialog-title"><button class="dialog-close" id="dialog-close" type="button" aria-label="إغلاق">×</button><div class="dialog-photo" id="dialog-photo"></div><div class="dialog-content"><p class="dialog-kicker" id="dialog-location"></p><h2 id="dialog-title"></h2><p class="dialog-description" id="dialog-description"></p><div class="dialog-facts" id="dialog-facts"></div><div class="dialog-price" id="dialog-price"></div><div class="dialog-alert">هذه معاينة فقط. الحجز غير متاح إلى أن يُربط النظام بقاعدة بيانات وخدمة دفع.</div><button class="dialog-book" type="button" disabled>الحجز غير متاح بعد</button></div></dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <noscript><p class="noscript">لتشغيل البحث والفلاتر، فعّل JavaScript في المتصفح.</p></noscript>
+    <script src="app.js" defer></script>
   </body>
 </html>
