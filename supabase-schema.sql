@@ -1,4 +1,4 @@
--- Supabase schema for booking review + Claude worker.
+public.bookingshttps://stackblitz.com/~/github.com/bbig50507-ctrl/bookish-succotash/pull/3-- Supabase schema for booking review + Claude worker.
 -- Review in a disposable Supabase project before applying to production.
 -- pg_net is intentionally configured in the `extensions` schema below.
 
