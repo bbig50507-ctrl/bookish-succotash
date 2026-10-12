@@ -5,21 +5,33 @@
     { id: 'city', title: 'استوديو دافئ في قلب المدينة', location: 'وسط المدينة · يسهل الوصول إليه', type: 'city', tags: [], guests: 2, beds: 1, baths: 1, rating: '4.87', price: 75, image: 'assets/stay-city.webp', label: 'مناسب لشخصين', description: 'استوديو عملي بتصميم بسيط، مثالي لزيارة قصيرة. الموقع والوصف والسعر أمثلة تجريبية وليست عرضًا حقيقيًا.' }
   ];
 
-  const grid = document.querySelector('#listing-grid');
-  const form = document.querySelector('#search-form');
-  const destination = document.querySelector('#destination');
-  const checkin = document.querySelector('#checkin');
-  const checkout = document.querySelector('#checkout');
-  const guestsSelect = document.querySelector('#guests');
-  const count = document.querySelector('#results-count');
-  const empty = document.querySelector('#empty-state');
-  const favoritesFilter = document.querySelector('#favorites-filter');
-  const dialog = document.querySelector('#detail-dialog');
-  const toast = document.querySelector('#toast');
+  const $ = (selector) => document.querySelector(selector);
+  const grid = $('#listing-grid');
+  const form = $('#search-form');
+  const destination = $('#destination');
+  const checkin = $('#checkin');
+  const checkout = $('#checkout');
+  const guestsSelect = $('#guests');
+  const count = $('#results-count');
+  const empty = $('#empty-state');
+  const favoritesFilter = $('#favorites-filter');
+  const dialog = $('#detail-dialog');
+  const toast = $('#toast');
   const saved = new Set(JSON.parse(localStorage.getItem('masaken-favorites') || '[]'));
+  const config = window.MASAKEN_SUPABASE || {};
+  const supabaseLib = window.supabase;
+  let client = null;
+  let currentUser = null;
+  let selectedStay = null;
   let activeCategory = 'all';
   let onlyFavorites = false;
   let toastTimer;
+
+  if (config.url && config.anonKey && supabaseLib?.createClient) {
+    client = supabaseLib.createClient(config.url, config.anonKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  }
 
   const iconHeart = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 5.1-8.8 10.2-8.8 10.2S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z"/></svg>';
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -28,7 +40,24 @@
     toast.textContent = message;
     toast.classList.add('show');
     window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2600);
+    toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  function updateAccountButton() {
+    const label = currentUser ? 'الحساب: ' + currentUser.email : 'الملف الشخصي';
+    $('#profile-button').setAttribute('aria-label', label);
+    $('#mobile-profile').setAttribute('aria-label', label);
+  }
+
+  async function loadAuthState() {
+    if (!client) return;
+    const { data } = await client.auth.getSession();
+    currentUser = data.session?.user || null;
+    updateAccountButton();
+    client.auth.onAuthStateChange((_event, session) => {
+      currentUser = session?.user || null;
+      updateAccountButton();
+    });
   }
 
   function filteredStays() {
@@ -36,11 +65,9 @@
     const minGuests = Number(guestsSelect.value || 1);
     return stays.filter((stay) => {
       const searchable = `${stay.title} ${stay.location} ${stay.type}`.toLocaleLowerCase('ar');
-      const matchesQuery = !query || searchable.includes(query);
-      const matchesCategory = activeCategory === 'all' || stay.type === activeCategory || stay.tags.includes(activeCategory);
-      const matchesGuests = stay.guests >= minGuests;
-      const matchesFavorite = !onlyFavorites || saved.has(stay.id);
-      return matchesQuery && matchesCategory && matchesGuests && matchesFavorite;
+      return (!query || searchable.includes(query)) &&
+        (activeCategory === 'all' || stay.type === activeCategory || stay.tags.includes(activeCategory)) &&
+        stay.guests >= minGuests && (!onlyFavorites || saved.has(stay.id));
     });
   }
 
@@ -63,45 +90,50 @@
       </article>`).join('');
     empty.hidden = results.length > 0;
     count.textContent = results.length ? `${new Intl.NumberFormat('ar').format(results.length)} أماكن مقترحة` : 'لا توجد نتائج';
-    document.querySelector('#show-all').hidden = results.length === stays.length && !onlyFavorites && activeCategory === 'all' && !destination.value.trim();
+    $('#show-all').hidden = results.length === stays.length && !onlyFavorites && activeCategory === 'all' && !destination.value.trim();
   }
 
   function showDetails(id) {
     const stay = stays.find((item) => item.id === id);
     if (!stay) return;
-    document.querySelector('#dialog-photo').style.backgroundImage = `url("${stay.image}")`;
-    document.querySelector('#dialog-location').textContent = stay.location;
-    document.querySelector('#dialog-title').textContent = stay.title;
-    document.querySelector('#dialog-description').textContent = stay.description;
-    document.querySelector('#dialog-facts').innerHTML = `<span>${stay.guests} ضيوف كحد أقصى</span><span>${stay.beds} غرف نوم</span><span>${stay.baths} حمّام</span>`;
-    document.querySelector('#dialog-price').innerHTML = `${new Intl.NumberFormat('ar').format(stay.price)} USDT <small>لليلة · سعر تجريبي</small>`;
+    selectedStay = stay;
+    $('#dialog-photo').style.backgroundImage = `url("${stay.image}")`;
+    $('#dialog-location').textContent = stay.location;
+    $('#dialog-title').textContent = stay.title;
+    $('#dialog-description').textContent = stay.description;
+    $('#dialog-facts').innerHTML = `<span>${stay.guests} ضيوف كحد أقصى</span><span>${stay.beds} غرف نوم</span><span>${stay.baths} حمّام</span>`;
+    $('#dialog-price').innerHTML = `${new Intl.NumberFormat('ar').format(stay.price)} USDT <small>لليلة · سعر تجريبي</small>`;
+    $('#open-booking').disabled = !client;
+    $('#booking-availability').textContent = client
+      ? 'يمكنك إرسال طلب للمراجعة. السعر والمكان المعروضان تجريبيان ولا يوجد تأكيد أو دفع.'
+      : 'الحجز غير متاح بعد: يلزم إعداد عنوان Supabase ومفتاح anon عام في supabase-config.js.';
     dialog.showModal();
+  }
+
+  function openAuth() {
+    if (!client) {
+      notify('لم يُضبط اتصال Supabase بعد؛ لا يمكن تسجيل الدخول الآن');
+      return;
+    }
+    $('#auth-dialog').showModal();
   }
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (Boolean(checkin.value) !== Boolean(checkout.value)) {
-      notify('اختر تاريخ الوصول والمغادرة معًا');
-      return;
-    }
-    if (checkin.value && checkout.value <= checkin.value) {
-      notify('يجب أن يكون تاريخ المغادرة بعد تاريخ الوصول');
-      return;
-    }
+    if (Boolean(checkin.value) !== Boolean(checkout.value)) return notify('اختر تاريخ الوصول والمغادرة معًا');
+    if (checkin.value && checkout.value <= checkin.value) return notify('يجب أن يكون تاريخ المغادرة بعد تاريخ الوصول');
     render();
-    if (checkin.value) notify('هذه معاينة فقط؛ لا يتوفر فحص حقيقي للتواريخ بعد');
-    document.querySelector('#listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (checkin.value) notify('التواريخ للتصفية فقط؛ لا يوجد تحقق من التوفر');
+    $('#listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   destination.addEventListener('input', render);
   guestsSelect.addEventListener('change', render);
-  document.querySelectorAll('.category').forEach((button) => {
-    button.addEventListener('click', () => {
-      activeCategory = button.dataset.category;
-      document.querySelectorAll('.category').forEach((item) => item.classList.toggle('active', item === button));
-      render();
-    });
-  });
+  document.querySelectorAll('.category').forEach((button) => button.addEventListener('click', () => {
+    activeCategory = button.dataset.category;
+    document.querySelectorAll('.category').forEach((item) => item.classList.toggle('active', item === button));
+    render();
+  }));
 
   grid.addEventListener('click', (event) => {
     const favoriteButton = event.target.closest('[data-favorite]');
@@ -120,13 +152,13 @@
     onlyFavorites = !onlyFavorites;
     favoritesFilter.classList.toggle('active', onlyFavorites);
     favoritesFilter.innerHTML = `<span aria-hidden="true">${onlyFavorites ? '♥' : '♡'}</span> ${onlyFavorites ? 'كل الأماكن' : 'المفضلة فقط'}`;
-    document.querySelector('#listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('#listings').scrollIntoView({ behavior: 'smooth', block: 'start' });
     render();
   }
   favoritesFilter.addEventListener('click', toggleFavorites);
-  document.querySelector('#mobile-favorites').addEventListener('click', toggleFavorites);
+  $('#mobile-favorites').addEventListener('click', toggleFavorites);
 
-  document.querySelector('#clear-filters').addEventListener('click', () => {
+  $('#clear-filters').addEventListener('click', () => {
     destination.value = '';
     guestsSelect.value = '1';
     activeCategory = 'all';
@@ -136,14 +168,93 @@
     document.querySelectorAll('.category').forEach((item) => item.classList.toggle('active', item.dataset.category === 'all'));
     render();
   });
-  document.querySelector('#reset-search').addEventListener('click', () => document.querySelector('#clear-filters').click());
-  document.querySelector('#show-all').addEventListener('click', () => {
-    document.querySelector('#clear-filters').click();
-    notify('تُعرض الآن جميع الأمثلة التجريبية');
-  });
-  document.querySelector('#profile-button').addEventListener('click', () => notify('الحسابات غير مفعّلة في النسخة التجريبية'));
-  document.querySelector('#mobile-profile').addEventListener('click', () => notify('الحسابات غير مفعّلة في النسخة التجريبية'));
-  document.querySelector('#dialog-close').addEventListener('click', () => dialog.close());
+  $('#reset-search').addEventListener('click', () => $('#clear-filters').click());
+  $('#show-all').addEventListener('click', () => { $('#clear-filters').click(); notify('تُعرض الآن جميع الأمثلة التجريبية'); });
+  $('#profile-button').addEventListener('click', openAuth);
+  $('#mobile-profile').addEventListener('click', openAuth);
+  $('#dialog-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => $('#' + button.dataset.closeDialog).close()));
+
+  $('#sign-in-button').addEventListener('click', async (event) => {
+    event.preventDefault();
+    if (!client) return notify('اتصال Supabase غير مضبوط');
+    const email = $('#auth-email').value.trim();
+    const password = $('#auth-password').value;
+    if (!email || !password) return notify('أدخل البريد الإلكتروني وكلمة المرور');
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) return notify(error.message);
+    $('#auth-dialog').close();
+    notify('تم تسجيل الدخول');
+  });
+
+  $('#sign-up-button').addEventListener('click', async () => {
+    if (!client) return notify('اتصال Supabase غير مضبوط');
+    const email = $('#auth-email').value.trim();
+    const password = $('#auth-password').value;
+    if (!email || password.length < 8) return notify('أدخل بريدًا صالحًا وكلمة مرور من 8 أحرف على الأقل');
+    const { data, error } = await client.auth.signUp({ email, password });
+    if (error) return notify(error.message);
+    if (data.session) {
+      $('#auth-dialog').close();
+      notify('تم إنشاء الحساب وتسجيل الدخول');
+    } else {
+      notify('تم إنشاء الحساب؛ راجع بريدك لتأكيده ثم سجّل الدخول');
+    }
+  });
+
+  $('#open-booking').addEventListener('click', () => {
+    if (!client || !selectedStay) return;
+    if (!currentUser) {
+      dialog.close();
+      notify('سجّل الدخول أولًا لإرسال طلب الحجز');
+      openAuth();
+      return;
+    }
+    dialog.close();
+    $('#booking-property').textContent = `${selectedStay.title} — السعر المعروض توضيحي`;
+    $('#booking-checkin').value = checkin.value;
+    $('#booking-checkout').value = checkout.value;
+    $('#booking-guests').value = String(Math.min(Number(guestsSelect.value || 1), selectedStay.guests));
+    $('#booking-dialog').showModal();
+  });
+
+  $('#booking-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!client || !currentUser || !selectedStay) return notify('سجّل الدخول ثم أعد المحاولة');
+    const arrival = $('#booking-checkin').value;
+    const departure = $('#booking-checkout').value;
+    const guestCount = Number($('#booking-guests').value);
+    if (departure <= arrival) return notify('يجب أن يكون تاريخ المغادرة بعد تاريخ الوصول');
+    if (guestCount > selectedStay.guests) return notify('عدد الضيوف يتجاوز السعة الموضحة للمكان');
+    const button = $('#submit-booking');
+    button.disabled = true;
+    button.textContent = 'جارٍ إرسال الطلب…';
+    try {
+      const { error } = await client.from('bookings').insert({
+        user_id: currentUser.id,
+        property_ref: selectedStay.id,
+        check_in: arrival,
+        check_out: departure,
+        guest_count: guestCount,
+        customer_note: $('#booking-note').value.trim() || null,
+        status: 'pending_review'
+      });
+      if (error) throw error;
+      $('#booking-dialog').close();
+      dialog.close();
+      $('#booking-note').value = '';
+      notify('وصل طلبك للمراجعة. هذا ليس تأكيدًا للحجز أو الدفع.');
+    } catch (error) {
+      console.error('Booking submission failed:', error.message);
+      notify('تعذّر إرسال الطلب. تحقق من إعداد Supabase وحاول مجددًا.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'إرسال طلب الحجز';
+    }
+  });
+
+  loadAuthState().catch(() => notify('تعذّر تحميل حالة الحساب'));
+  updateAccountButton();
   render();
 })();
