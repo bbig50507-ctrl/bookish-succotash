@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dar — Rent homes, villas &amp; hotels</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F6F6;--card:#fff;--ink:#12262B;--mut:#5B6E72;--line:#D5E0E1;--teal:#0F6E7A;--gold:#E3A008;--onteal:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1A1D;--card:#15272B;--ink:#E8F1F2;--mut:#93AAAE;--line:#25393D;--teal:#38AEBB;--onteal:#06191C}}
+:root[data-theme="dark"]{--bg:#0D1A1D;--card:#15272B;--ink:#E8F1F2;--mut:#93AAAE;--line:#25393D;--teal:#38AEBB;--onteal:#06191C}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,system-ui,"Segoe UI",Tahoma,sans-serif;line-height:1.6}
+.wrap{max-width:1000px;margin:auto;padding:0 16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 0}
+.logo{font-weight:800;font-size:1.5rem;color:var(--teal)}
+.btn{font:inherit;border:0;border-radius:10px;padding:9px 16px;cursor:pointer;background:var(--teal);color:var(--onteal);font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.gold{background:var(--gold);color:#1B1400}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1{font-size:clamp(1.6rem,5vw,2.6rem);line-height:1.25;margin:18px 0 6px;font-weight:800}
+.sub{color:var(--mut);margin:0 0 18px}
+.search{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
+.search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:8px}
+.mic.on{background:var(--gold);color:#1B1400}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.chip{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:5px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--teal);color:var(--onteal);border-color:var(--teal)}
+select,.f input{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:10px 0 30px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pic{height:110px;display:flex;align-items:flex-end;padding:10px;color:#fff;font-weight:600}
+.body{padding:12px 14px 14px}
+.body h3{margin:0;font-size:1.05rem}
+.meta{color:var(--mut);font-size:.9rem}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.price{font-weight:800;font-size:1.15rem}
+.ver{color:var(--teal);font-size:.85rem;font-weight:600}
+section.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:20px}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.f label{display:grid;gap:3px;font-size:.9rem;color:var(--mut)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);max-width:420px;width:92%}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.bk{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line)}
+.stat{font-size:1.8rem;font-weight:800;color:var(--gold)}
+.empty{color:var(--mut);padding:20px;text-align:center}
+dialog{max-height:90vh;overflow:auto;max-width:460px}.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:8px 0;text-align:center}.wd{color:var(--mut);font-size:.8rem}.day{font:inherit;border:0;border-radius:8px;padding:6px 0;background:transparent;color:var(--ink);cursor:pointer}.day:disabled{color:var(--mut);opacity:.35;text-decoration:line-through;cursor:not-allowed}.day.in{background:var(--line)}.day.sel{background:var(--teal);color:var(--onteal);font-weight:800}.btn:disabled{opacity:.5;cursor:not-allowed}
+footer{color:var(--mut);font-size:.85rem;padding:10px 0 30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">Dar · دار</div>
+<div><span class="meta" id="acct"></span> <button class="btn ghost" id="role"></button> <button class="btn ghost" id="lang">Français</button></div></header>
+
+<h1 id="t_h1"></h1><p class="sub" id="t_sub"></p>
+<div class="search"><input id="q" aria-label="search"><button class="btn mic" id="mic" aria-label="voice">🎙</button><button class="btn" id="go"></button></div>
+<div class="filters" id="chips"></div>
+<div class="filters f"><select id="city"></select><label style="display:flex;gap:6px;align-items:center"><span id="t_max"></span><input id="max" type="number" min="0" style="width:90px"></label></div>
+<div class="grid" id="grid"></div>
+
+<section class="panel" id="hostp"><h2 id="t_host"></h2>
+<div class="f">
+<label><span id="l_name"></span><input id="n_name"></label>
+<label><span id="l_city"></span><select id="n_city"></select></label>
+<label><span id="l_type"></span><select id="n_type"></select></label>
+<label><span id="l_price"></span><input id="n_price" type="number" min="1"></label></div>
+<button class="btn gold" id="add"></button></section>
+
+<section class="panel"><h2 id="t_rev"></h2>
+<div style="display:flex;gap:30px;flex-wrap:wrap"><div><div class="stat" id="s_book">0</div><div class="meta" id="l_book"></div></div>
+<div><div class="stat" id="s_rev">$0</div><div class="meta" id="l_rev"></div></div></div>
+<p class="meta" id="t_rev_note"></p></section>
+<footer id="t_foot"></footer>
+</div>
+
+<dialog id="dlg"><div id="d_pic" class="pic" style="height:130px;border-radius:10px"></div><h3 id="d_title" style="margin:10px 0 0"></h3><div class="meta" id="d_meta"></div><p id="d_desc" class="meta"></p><div id="d_am" class="filters"></div><div id="d_cal"></div><div id="d_bk" style="margin-top:10px"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn" id="d_ok"></button><button class="btn ghost" id="d_x"></button></div></dialog>
+
+<script>
+var FEE_GUEST=0.10, FEE_HOST=0.05;
+var T={
+ar:{h1:"اعثر على بيت أو فيلا أو فندق بجملة واحدة",sub:"اكتب أو تحدّث: «فيلا قرب البحر في تيبازة أقل من 150»",ph:"ماذا تبحث عن؟",go:"بحث",all:"كل المدن",max:"أقصى سعر / ليلة $",host:"أضف عقارك",name:"اسم العقار",city:"المدينة",type:"النوع",price:"السعر / ليلة $",add:"نشر العقار",rev:"لوحة أرباح المنصة",book:"طلبات حجز",revl:"عمولة المنصة",note:"تربح المنصة 10% من الضيف + 5% من المالك على كل حجز.",foot:"نسخة تجريبية: البيانات محفوظة في متصفحك فقط.",night:"ليلة",book_btn:"احجز",nights:"عدد الليالي",sub_t:"سعر الإقامة",gf:"رسوم الخدمة (10%)",tot:"المجموع",ok:"تأكيد طلب الحجز",x:"إلغاء",done:"تم إرسال طلب الحجز ✓",none:"لا توجد نتائج. جرّب تغيير الفلاتر.",ver:"✔ موثّق",acct_on:"● حساب متصل",acct_off:"● وضع محلي",host_r:"مالك",guest_r:"ضيف",err:"تعذر الحفظ. تحتاج صلاحية مساهم.",pick:"اختر تاريخ الوصول ثم المغادرة",desc:"عقار نظيف ومجهز بالكامل، مناسب للعائلات والمجموعات. التواصل مع المالك بعد تأكيد الحجز.",am:{wifi:"واي فاي",ac:"تكييف",kitchen:"مطبخ",pool:"مسبح",parking:"موقف سيارات"},nov:"المتصفح لا يدعم الصوت، اكتب طلبك.",types:{all:"الكل",villa:"فيلا",apt:"شقة",house:"منزل",hotel:"فندق"},cities:{alger:"الجزائر",oran:"وهران",blida:"البليدة",tipaza:"تيبازة",paris:"باريس",istanbul:"إسطنبول",dubai:"دبي"},sea:"قرب البحر"},
+fr:{h1:"Trouvez une maison, villa ou hôtel en une phrase",sub:"Écrivez ou parlez : « villa près de la mer à Tipaza moins de 150 »",ph:"Que cherchez-vous ?",go:"Chercher",all:"Toutes les villes",max:"Prix max / nuit $",host:"Ajouter votre bien",name:"Nom du bien",city:"Ville",type:"Type",price:"Prix / nuit $",add:"Publier",rev:"Revenus de la plateforme",book:"demandes de réservation",revl:"commissions",note:"La plateforme gagne 10 % côté voyageur + 5 % côté hôte par réservation.",foot:"Version démo : données enregistrées dans votre navigateur uniquement.",night:"nuit",book_btn:"Réserver",nights:"Nombre de nuits",sub_t:"Séjour",gf:"Frais de service (10 %)",tot:"Total",ok:"Confirmer la demande",x:"Annuler",done:"Demande de réservation envoyée ✓",none:"Aucun résultat. Modifiez les filtres.",ver:"✔ Vérifié",acct_on:"● Compte connecté",acct_off:"● Mode local",host_r:"Hôte",guest_r:"Voyageur",err:"Échec de l'enregistrement. Droits de contributeur requis.",pick:"Choisissez les dates d'arrivée puis de départ",desc:"Bien propre et entièrement équipé, idéal pour familles et groupes. Contact avec l'hôte après confirmation.",am:{wifi:"Wi-Fi",ac:"Climatisation",kitchen:"Cuisine",pool:"Piscine",parking:"Parking"},nov:"Voix non prise en charge, écrivez votre demande.",types:{all:"Tous",villa:"Villa",apt:"Appartement",house:"Maison",hotel:"Hôtel"},cities:{alger:"Alger",oran:"Oran",blida:"Blida",tipaza:"Tipaza",paris:"Paris",istanbul:"Istanbul",dubai:"Dubaï"},sea:"Près de la mer"}
+};
+var KW={villa:["villa","فيلا"],apt:["apparte","شقة","شقه","studio"],house:["maison","منزل","بيت","house"],hotel:["hotel","hôtel","فندق"]};
+var CK={alger:["alger","الجزائر","algiers"],oran:["oran","وهران"],blida:["blida","البليدة"],tipaza:["tipaza","تيبازة"],paris:["paris","باريس"],istanbul:["istanbul","إسطنبول","اسطنبول"],dubai:["dubai","dubaï","دبي"]};
+var SEA=["mer","plage","sea","beach","بحر","شاطئ"];
+var COLORS={villa:"#0F6E7A",apt:"#5B4B8A",house:"#2F7D4F",hotel:"#B5532B"};
+var L=[
+{id:1,t:"villa",c:"tipaza",p:140,r:4.8,sea:1,n:{ar:"فيلا الأمواج",fr:"Villa Les Vagues"}},
+{id:2,t:"apt",c:"alger",p:55,r:4.5,sea:0,n:{ar:"شقة وسط العاصمة",fr:"Appartement centre-ville"}},
+{id:3,t:"hotel",c:"oran",p:80,r:4.6,sea:1,n:{ar:"فندق الكورنيش",fr:"Hôtel de la Corniche"}},
+{id:4,t:"house",c:"blida",p:45,r:4.7,sea:0,n:{ar:"منزل بين الورود",fr:"Maison aux Roses"}},
+{id:5,t:"apt",c:"paris",p:120,r:4.4,sea:0,n:{ar:"شقة مونمارتر",fr:"Appartement Montmartre"}},
+{id:6,t:"hotel",c:"dubai",p:210,r:4.9,sea:1,n:{ar:"فندق المارينا",fr:"Hôtel Marina"}},
+{id:7,t:"villa",c:"istanbul",p:160,r:4.6,sea:1,n:{ar:"فيلا البوسفور",fr:"Villa Bosphore"}}
+];
+var lang="ar",type="all",bookings=[],DB=null,ME=null,ROLE="host";
+function $(i){return document.getElementById(i)}
+try{var s=JSON.parse(localStorage.getItem("dar_extra")||"[]");if(Array.isArray(s))L=L.concat(s);var b=JSON.parse(localStorage.getItem("dar_bk")||"[]");if(Array.isArray(b))bookings=b}catch(e){}
+function save(){try{localStorage.setItem("dar_extra",JSON.stringify(L.filter(function(x){return x.mine})));localStorage.setItem("dar_bk",JSON.stringify(bookings))}catch(e){}}
+function fillSel(el,obj,first){var v=el.value;el.innerHTML=(first?'<option value="">'+first+'</option>':'')+Object.keys(obj).map(function(k){return '<option value="'+k+'">'+obj[k]+'</option>'}).join('');el.value=v}
+function ui(){var t=T[lang];document.documentElement.lang=lang;document.documentElement.dir=lang=="ar"?"rtl":"ltr";$("lang").textContent=lang=="ar"?"Français":"العربية";
+var m={t_h1:"h1",t_sub:"sub",go:"go",t_max:"max",t_host:"host",l_name:"name",l_city:"city",l_type:"type",l_price:"price",add:"add",t_rev:"rev",l_book:"book",l_rev:"revl",t_rev_note:"note",t_foot:"foot",d_ok:"ok",d_x:"x"};
+for(var k in m)$(k).textContent=t[m[k]];$("q").placeholder=t.ph;
+setAcct();fillSel($("city"),t.cities,t.all);fillSel($("n_city"),t.cities);var ty=Object.assign({},t.types);delete ty.all;fillSel($("n_type"),ty);
+$("chips").innerHTML=Object.keys(t.types).map(function(k){return '<button class="chip" data-t="'+k+'" aria-pressed="'+(k==type)+'">'+t.types[k]+'</button>'}).join("");
+render()}
+function setAcct(){var t=T[lang];$("acct").textContent=DB?t.acct_on:t.acct_off;$("role").textContent=ROLE=="host"?t.host_r:t.guest_r;$("hostp").style.display=ROLE=="host"?"":"none"}
+function render(){var t=T[lang],c=$("city").value,mx=parseFloat($("max").value)||1e9,sea=$("q").dataset.sea=="1";
+var r=L.filter(function(x){return (type=="all"||x.t==type)&&(!c||x.c==c)&&x.p<=mx&&(!sea||x.sea)});
+$("grid").innerHTML=r.length?r.map(function(x){return '<div class="card"><div class="pic" style="background:linear-gradient(135deg,'+COLORS[x.t]+',#12262B)">'+t.types[x.t]+'</div><div class="body"><h3>'+esc(x.n[lang]||x.n.ar||x.n.fr)+'</h3><div class="meta">'+t.cities[x.c]+' · ★ '+x.r+(x.sea?' · '+t.sea:'')+'</div><div class="row"><div><span class="price">$'+x.p+'</span> <span class="meta">/ '+t.night+'</span></div><button class="btn" data-b="'+x.id+'">'+t.book_btn+'</button></div><div class="ver">'+t.ver+'</div></div></div>'}).join(""):'<div class="empty">'+t.none+'</div>';
+var rev=bookings.reduce(function(a,b){return a+b.fee},0);$("s_book").textContent=bookings.length;$("s_rev").textContent="$"+rev.toFixed(0)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function smart(){var q=$("q").value.toLowerCase();var found=false;
+Object.keys(KW).forEach(function(k){if(KW[k].some(function(w){return q.indexOf(w)>-1})){type=k;found=true}});
+Object.keys(CK).forEach(function(k){if(CK[k].some(function(w){return q.indexOf(w)>-1})){$("city").value=k}});
+var n=q.match(/\d+/);$("max").value=n?n[0]:"";
+$("q").dataset.sea=SEA.some(function(w){return q.indexOf(w)>-1})?"1":"0";
+if(!found&&!q)type="all";ui()}
+var cur=null,cm=new Date(),A=null,Z=null;
+function iso(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function booked(id,d){var s=iso(d);if(id<100&&(d.getDate()*7+id*3)%11==0)return true;return bookings.some(function(b){return b.id==id&&b.a&&s>=b.a&&s<b.z})}
+function free(a,z){for(var d=new Date(a+"T00:00");iso(d)<z;d.setDate(d.getDate()+1)){if(booked(cur.id,d))return false}return true}
+function nights(){return A&&Z?Math.round((new Date(Z)-new Date(A))/864e5):0}
+function cal(){var loc=lang,h="",f=new Intl.DateTimeFormat(loc,{month:"long",year:"numeric"}),wd=new Intl.DateTimeFormat(loc,{weekday:"narrow"}),i;
+h+='<div class="row"><button class="btn ghost" data-m="-1">\u2039</button><b>'+f.format(cm)+'</b><button class="btn ghost" data-m="1">\u203a</button></div><div class="cal">';
+for(i=0;i<7;i++)h+='<span class="wd">'+wd.format(new Date(2023,0,1+i))+'</span>';
+for(i=0;i<cm.getDay();i++)h+='<span></span>';
+var n=new Date(cm.getFullYear(),cm.getMonth()+1,0).getDate(),today=iso(new Date());
+for(i=1;i<=n;i++){var d=new Date(cm.getFullYear(),cm.getMonth(),i),s=iso(d),dis=s<today||booked(cur.id,d),cls="day"+(s==A||s==Z?" sel":(A&&Z&&s>A&&s<Z?" in":""));h+='<button class="'+cls+'" '+(dis?'disabled ':'')+'data-d="'+s+'">'+i+'</button>'}
+$("d_cal").innerHTML=h+'</div>';summary()}
+function summary(){var t=T[lang],n=nights();
+if(!n){$("d_bk").innerHTML='<div class="meta">'+t.pick+'</div>';$("d_ok").disabled=true;return}
+var sub=cur.p*n,g=sub*FEE_GUEST;
+$("d_bk").innerHTML='<div class="bk"><span>'+A+' \u2192 '+Z+'</span><b>'+n+' '+t.night+'</b></div><div class="bk"><span>'+t.sub_t+' ($'+cur.p+' \u00d7 '+n+')</span><b>$'+sub.toFixed(0)+'</b></div><div class="bk"><span>'+t.gf+'</span><b>$'+g.toFixed(0)+'</b></div><div class="bk"><span>'+t.tot+'</span><b>$'+(sub+g).toFixed(0)+'</b></div>';$("d_ok").disabled=false}
+function openD(id){cur=L.filter(function(x){return x.id==id})[0];A=Z=null;cm=new Date();cm.setDate(1);var t=T[lang];
+$("d_title").textContent=cur.n[lang]||cur.n.ar;$("d_meta").textContent=t.cities[cur.c]+' \u00b7 \u2605 '+cur.r;
+$("d_pic").style.background='linear-gradient(135deg,'+COLORS[cur.t]+',#12262B)';$("d_pic").textContent=t.types[cur.t];$("d_desc").textContent=t.desc;
+var am=["wifi","ac","kitchen"].concat(cur.t=="hotel"||cur.t=="villa"?["pool"]:[],cur.t!="apt"?["parking"]:[]);
+$("d_am").innerHTML=am.map(function(a){return '<span class="chip">'+t.am[a]+'</span>'}).join("");cal();$("dlg").showModal()}
+document.addEventListener("click",function(e){var el=e.target.closest("[data-t],[data-b],[data-m],[data-d]");if(!el)return;
+if(el.dataset.t){type=el.dataset.t;ui()}
+else if(el.dataset.b)openD(+el.dataset.b);
+else if(el.dataset.m){cm.setMonth(cm.getMonth()+ +el.dataset.m);cal()}
+else{var s=el.dataset.d;if(!A||Z||s<=A){A=s;Z=null}else if(free(A,s))Z=s;else{A=s;Z=null}cal()}});
+$("d_x").onclick=function(){$("dlg").close()};
+$("d_ok").onclick=function(){var n=nights();if(!n)return;var bk={id:cur.id,a:A,z:Z,fee:cur.p*n*(FEE_GUEST+FEE_HOST),guest:ME||""};if(DB){DB.collection("bookings").doc("b"+Date.now()).set(bk).catch(function(){alert(T[lang].err)})}else{bookings.push(bk);save()}$("dlg").close();render();alert(T[lang].done)};
+$("lang").onclick=function(){lang=lang=="ar"?"fr":"ar";ui()};
+$("go").onclick=smart;$("q").onkeydown=function(e){if(e.key=="Enter")smart()};
+$("city").onchange=render;$("max").oninput=render;
+$("add").onclick=function(){var nm=$("n_name").value.trim(),p=parseFloat($("n_price").value);if(!nm||!p)return;
+var id=Date.now(),o={id:id,t:$("n_type").value,c:$("n_city").value,p:p,r:5,sea:0,n:{ar:nm,fr:nm}};if(DB&&ME){o.owner=ME;DB.collection("listings").doc("l"+id).set(o).catch(function(){alert(T[lang].err)})}else{o.mine=1;L.push(o);save()}$("n_name").value="";$("n_price").value="";render()};
+$("mic").onclick=function(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert(T[lang].nov);return}
+var r=new SR();r.lang=lang=="ar"?"ar-DZ":"fr-FR";var b=$("mic");b.classList.add("on");
+r.onresult=function(e){$("q").value=e.results[0][0].transcript;smart()};r.onend=function(){b.classList.remove("on")};r.onerror=function(){b.classList.remove("on")};
+try{r.start()}catch(x){b.classList.remove("on")}};
+var BASE=L.filter(function(x){return !x.mine});
+$("role").onclick=function(){ROLE=ROLE=="host"?"guest":"host";setAcct();if(DB&&ME)DB.collection("data/users/"+ME).doc("profile").set({role:ROLE}).catch(function(){})};
+ui();
+(async function(){try{if(!window.claude||!claude.use)return;var u=await claude.use("user"),d=await claude.use("db");if(!u||!d)return;
+DB=d;ME=await u.id();ROLE="guest";
+try{var p=await DB.collection("data/users/"+ME).doc("profile").get();if(p.exists&&p.data().role)ROLE=p.data().role}catch(e){}
+setAcct();
+DB.collection("listings").onSnapshot(function(sn){L=BASE.concat(sn.docs.map(function(x){var o=x.data();o.own=(o.owner==ME);return o}));render()});
+DB.collection("bookings").onSnapshot(function(sn){bookings=sn.docs.map(function(x){return x.data()});render()})}catch(e){}})();
+</script>
+</body>
+</html>
