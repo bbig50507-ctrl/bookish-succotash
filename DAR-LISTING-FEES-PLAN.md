@@ -3,7 +3,7 @@
 ## Approved product decisions
 - Launch globally from the start, while keeping currency, locale, taxes, and payment-provider eligibility configurable per market.
 - Charge per property listing, not per owner account.
-- Each owner may receive one free first listing at launch.
+- Launch offer: a limited, globally capped number of free property listings; the exact cap must be configured before activation. The draft schema limits one claim per owner and property.
 - Each listing term lasts 30 days.
 - Do not enable real charges until the merchant country, legal requirements, currency, payment provider, webhook verification, refunds, and production credentials are reviewed and explicitly approved.
 - Do not merge this branch into `main` without the owner's approval.
@@ -28,7 +28,7 @@ Before applying: compare against the live Supabase schema and any untracked migr
 
 ## Owner and admin UI
 1. Owner dashboard: property list, add/edit draft, media URLs, submission status, review rejection reason, listing expiry, order history, renew action.
-2. Listing checkout preview: selected property, 30-day term, currency and amount; label free first listing as free only after server eligibility check. While payments are unconfigured, paid checkout remains disabled and clearly labelled as not available yet.
+2. Listing checkout preview: selected property, 30-day term, currency and amount; show the limited free launch offer only after the server confirms remaining slots and owner eligibility. While payments are unconfigured, paid checkout remains disabled and clearly labelled as not available yet.
 3. Admin moderation: pending queue, approve/reject with reason, suspend listing, manage plan price/active status, inspect orders/payments/audit trail. Admin mutations must be server-side and role-gated; no client-supplied admin flag.
 4. Public discovery: only approved and currently entitled listings; distinguish sponsored listings from organic results.
 
@@ -38,15 +38,15 @@ Before applying: compare against the live Supabase schema and any untracked migr
 - Use an idempotency key for order creation and payment webhook handling.
 - Never mark a payment successful based on browser redirects.
 - Verify provider webhook signature, amount, currency, order reference, and provider event ID.
-- Grant entitlement exactly once after verified payment, or after server-verified first-free-listing eligibility.
+- Grant entitlement exactly once after verified payment, or after a server-side atomic promotion claim that enforces the global cap and one claim per owner.
 - Keep all service-role/payment secrets on the server; never commit them or expose them in browser config.
 - Default-deny production checkout until merchant eligibility, legal review, refunds/cancellations, taxes, and provider production credentials are approved.
 
 ## Acceptance checks before launch
 - Owner A cannot read/update Owner B's drafts, orders, payments, or entitlements.
-- Anonymous users can read only published listings that are within an active entitlement window.
+- Anonymous users can read only fields exposed by `public.public_properties`, filtered to published listings within an active entitlement window.
 - Owners cannot approve or publish their own listings by editing JSON.
-- The first-free-listing rule cannot be bypassed by concurrent requests, retries, or creating multiple accounts without an explicit anti-abuse policy.
+- The limited launch promotion cannot exceed its configured global cap under concurrent requests, retries, or multiple accounts; apply an explicit anti-abuse policy.
 - Duplicate webhook delivery cannot duplicate a charge or entitlement.
 - Expired listings disappear from public search automatically.
 - Payment configuration remains off and no real payment is attempted in test mode.
