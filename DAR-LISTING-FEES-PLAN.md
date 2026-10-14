@@ -3,7 +3,7 @@
 ## Approved product decisions
 - Launch globally from the start, while keeping currency, locale, taxes, and payment-provider eligibility configurable per market.
 - Charge per property listing, not per owner account.
-- Launch offer: a limited, globally capped number of free property listings; the exact cap must be configured before activation. The draft schema limits one claim per owner and property.
+- Launch offer: exactly 100 free property listings globally. The campaign is configured with a 100-claim cap but remains inactive until the atomic claim workflow and abuse controls are implemented and tested. The draft schema limits one claim per owner and property.
 - Each listing term lasts 30 days.
 - Do not enable real charges until the merchant country, legal requirements, currency, payment provider, webhook verification, refunds, and production credentials are reviewed and explicitly approved.
 - Do not merge this branch into `main` without the owner's approval.
