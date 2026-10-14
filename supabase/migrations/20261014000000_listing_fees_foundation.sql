@@ -91,6 +91,28 @@ create table if not exists public.listing_entitlements (
 );
 create index if not exists listing_entitlements_property_end_idx on public.listing_entitlements(property_id, ends_at desc);
 
+-- Limited launch promotion: deliberately inactive until an operator sets a cap
+-- and activates it. A trusted server transaction must atomically consume a slot.
+create table if not exists public.listing_promotion_config (
+  code text primary key check (code = 'launch-limited'),
+  max_claims integer not null check (max_claims > 0),
+  claims_used integer not null default 0 check (claims_used >= 0 and claims_used <= max_claims),
+  is_active boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.listing_promotion_claims (
+  id uuid primary key default gen_random_uuid(),
+  promotion_code text not null references public.listing_promotion_config(code) on delete restrict,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  property_id uuid not null unique references public.properties(id) on delete restrict,
+  order_id uuid not null unique references public.listing_orders(id) on delete restrict,
+  created_at timestamptz not null default now(),
+  unique (promotion_code, owner_id)
+);
+alter table public.listing_promotion_config enable row level security;
+alter table public.listing_promotion_claims enable row level security;
+
 create table if not exists public.listing_audit_logs (
   id bigint generated always as identity primary key,
   actor_id uuid references auth.users(id) on delete set null,
@@ -113,7 +135,7 @@ alter table public.listing_audit_logs enable row level security;
 -- must be performed by a trusted server-side admin process.
 drop policy if exists properties_owner_select on public.properties;
 create policy properties_owner_select on public.properties
-  for select to authenticated using (owner_id = (select auth.uid()) or status = 'published');
+  for select to authenticated using (owner_id = (select auth.uid()));
 drop policy if exists properties_owner_insert on public.properties;
 create policy properties_owner_insert on public.properties
   for insert to authenticated with check (owner_id = (select auth.uid()) and status in ('draft','pending_review'));
@@ -124,6 +146,22 @@ create policy properties_owner_update on public.properties
 drop policy if exists properties_owner_delete on public.properties;
 create policy properties_owner_delete on public.properties
   for delete to authenticated using (owner_id = (select auth.uid()) and status in ('draft','rejected'));
+
+-- Public discovery is exposed through a filtered view, not direct table access.
+-- The view returns only published properties with a currently valid entitlement.
+create or replace view public.public_properties as
+select p.id, p.title, p.description, p.property_type, p.country_code, p.city,
+       p.currency, p.nightly_price, p.media_urls, p.created_at
+from public.properties p
+where p.status = 'published'
+  and exists (
+    select 1
+    from public.listing_entitlements e
+    where e.property_id = p.id
+      and e.starts_at <= now()
+      and e.ends_at > now()
+  );
+grant select on public.public_properties to anon, authenticated;
 
 drop policy if exists listing_plans_read_active on public.listing_plans;
 create policy listing_plans_read_active on public.listing_plans
