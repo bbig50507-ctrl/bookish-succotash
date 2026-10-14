@@ -92,7 +92,8 @@ create table if not exists public.listing_entitlements (
 create index if not exists listing_entitlements_property_end_idx on public.listing_entitlements(property_id, ends_at desc);
 
 -- Limited launch promotion: deliberately inactive until an operator sets a cap
--- and activates it. A trusted server transaction must atomically consume a slot.
+-- and activates it. The launch campaign is configured for 100 claims but stays inactive
+-- until an operator explicitly enables it. A trusted server transaction must atomically consume a slot.
 create table if not exists public.listing_promotion_config (
   code text primary key check (code = 'launch-limited'),
   max_claims integer not null check (max_claims > 0),
@@ -110,6 +111,10 @@ create table if not exists public.listing_promotion_claims (
   created_at timestamptz not null default now(),
   unique (promotion_code, owner_id)
 );
+insert into public.listing_promotion_config (code, max_claims, claims_used, is_active)
+values ('launch-limited', 100, 0, false)
+on conflict (code) do nothing;
+
 alter table public.listing_promotion_config enable row level security;
 alter table public.listing_promotion_claims enable row level security;
 
