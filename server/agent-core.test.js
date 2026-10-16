@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AgentManagerCore, InMemoryAgentStore } from './agent-core.js';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { AgentManagerCore, InMemoryAgentStore, JsonFileAgentStore } from './agent-core.js';
 
 const makeManager = () => {
   let tick = 0;
@@ -79,4 +82,24 @@ test('report keeps production actions and real payments disabled', async () => {
   assert.equal(report.safety.productionActionsEnabled, false);
   assert.equal(report.safety.realPaymentsEnabled, false);
   assert.equal(report.safety.mergeAndDeploymentRequireOwnerApproval, true);
+});
+
+test('file store persists tasks and approvals across manager instances', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dar-agent-core-'));
+  try {
+    const filePath = join(dir, 'state.json');
+    const first = new AgentManagerCore({ store: new JsonFileAgentStore(filePath) });
+    const task = await first.createTask({ title: 'Persist', goal: 'Survive manager restart' });
+    const approval = await first.requestApproval({
+      taskId: task.id,
+      action: 'production_database_write',
+      summary: 'Write production data after explicit approval',
+    });
+    const second = new AgentManagerCore({ store: new JsonFileAgentStore(filePath) });
+    assert.equal((await second.getTask(task.id)).status, 'queued');
+    assert.equal((await second.report()).pendingApprovals, 1);
+    assert.equal((await second.authorizeAction('production_database_write', approval.id)).allowed, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
