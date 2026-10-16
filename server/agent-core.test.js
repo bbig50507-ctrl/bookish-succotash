@@ -103,3 +103,17 @@ test('file store persists tasks and approvals across manager instances', async (
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('approval pauses a running task and approval decision resumes it', async () => {
+  const manager = makeManager();
+  const task = await manager.createTask({ title: 'Sensitive step', goal: 'Wait for owner approval' });
+  await manager.transitionTask(task.id, 'running');
+  const approval = await manager.requestApproval({
+    taskId: task.id,
+    action: 'production_migration',
+    summary: 'Apply a production migration after review',
+  });
+  assert.equal((await manager.getTask(task.id)).status, 'waiting_approval');
+  await manager.decideApproval(approval.id, { decision: 'approved', decidedBy: 'owner' });
+  assert.equal((await manager.getTask(task.id)).status, 'queued');
+});
