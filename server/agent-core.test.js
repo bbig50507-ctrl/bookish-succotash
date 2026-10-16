@@ -37,7 +37,8 @@ test('bounds retries and eventually fails', async () => {
   await manager.transitionTask(task.id, 'running');
   const failed = await manager.failTask(task.id, 'second failure');
   assert.equal(failed.status, 'failed');
-  await assert.rejects(manager.transitionTask(task.id, 'queued'), /Invalid task transition/);
+  await manager.transitionTask(task.id, 'queued');
+  await assert.rejects(manager.transitionTask(task.id, 'running'), /Task retry limit reached/);
 });
 
 test('sensitive action cannot proceed without matching approved request', async () => {
