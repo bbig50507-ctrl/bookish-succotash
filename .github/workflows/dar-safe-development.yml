@@ -1,0 +1,43 @@
+name: Dar safe development pipeline
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - "automation/**"
+      - "feat/**"
+      - "feature/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dar-safe-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-quality:
+    name: Validate Dar HTML entry points
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run dependency-free frontend checks
+        run: python scripts/validate_frontend.py
+
+  safety-boundary:
+    name: Verify this workflow does not deploy or mutate production
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Confirm safe automation scope
+        run: |
+          echo "This workflow only runs read-only repository checks."
+          echo "It has no deployment permissions, secrets, database writes, or merge steps."
