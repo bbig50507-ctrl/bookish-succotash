@@ -7,6 +7,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 export const TASK_STATES = Object.freeze([
   'queued', 'running', 'waiting_approval', 'succeeded', 'failed', 'cancelled',
@@ -73,7 +75,50 @@ export class InMemoryAgentStore {
   async listMemories() { return [...this.memories.values()].map(clone); }
   async saveMemory(memory) { this.memories.set(memory.id, clone(memory)); return clone(memory); }
   async getApproval(id) { return clone(this.approvals.get(id) ?? null); }
+  async listApprovals() { return [...this.approvals.values()].map(clone); }
   async saveApproval(approval) { this.approvals.set(approval.id, clone(approval)); return clone(approval); }
+}
+
+/**
+ * Small single-process JSON store for local development and prototypes.
+ * For multi-instance/production deployments use a transactional database adapter.
+ */
+export class JsonFileAgentStore {
+  constructor(filePath) {
+    this.filePath = requiredString(filePath, 'filePath', 1000);
+    this.writeQueue = Promise.resolve();
+  }
+  async #read() {
+    try {
+      return JSON.parse(await readFile(this.filePath, 'utf8'));
+    } catch (error) {
+      if (error.code === 'ENOENT') return { tasks: {}, events: {}, memories: {}, approvals: {} };
+      throw error;
+    }
+  }
+  async #mutate(fn) {
+    const operation = this.writeQueue.then(async () => {
+      const state = await this.#read();
+      const result = fn(state);
+      await mkdir(dirname(this.filePath), { recursive: true });
+      const temp = `${this.filePath}.${randomUUID()}.tmp`;
+      await writeFile(temp, JSON.stringify(state, null, 2), { encoding: 'utf8', mode: 0o600 });
+      await rename(temp, this.filePath);
+      return clone(result);
+    });
+    this.writeQueue = operation.catch(() => {});
+    return operation;
+  }
+  async getTask(id) { const s = await this.#read(); return clone(s.tasks[id] ?? null); }
+  async saveTask(task) { return this.#mutate(s => (s.tasks[task.id] = clone(task))); }
+  async listTasks() { const s = await this.#read(); return Object.values(s.tasks).map(clone); }
+  async getEvents(taskId) { const s = await this.#read(); return clone(s.events[taskId] ?? []); }
+  async addEvent(taskId, event) { return this.#mutate(s => { (s.events[taskId] ??= []).push(clone(event)); return event; }); }
+  async listMemories() { const s = await this.#read(); return Object.values(s.memories).map(clone); }
+  async saveMemory(memory) { return this.#mutate(s => (s.memories[memory.id] = clone(memory))); }
+  async getApproval(id) { const s = await this.#read(); return clone(s.approvals[id] ?? null); }
+  async listApprovals() { const s = await this.#read(); return Object.values(s.approvals).map(clone); }
+  async saveApproval(approval) { return this.#mutate(s => (s.approvals[approval.id] = clone(approval))); }
 }
 
 export class AgentManagerCore {
@@ -201,7 +246,7 @@ export class AgentManagerCore {
       type,
       content: requiredString(content, 'content', 4000),
       source: requiredString(source, 'source', 300),
-      confidence: confidence == null ? null : Math.max(0, Math.min(1, Number(confidence))),
+      confidence: confidence == null ? null : (() => { const value = Number(confidence); if (!Number.isFinite(value)) throw new TypeError('confidence must be a finite number'); return Math.max(0, Math.min(1, value)); })(),
       createdAt: this.now(),
       updatedAt: this.now(),
       archivedAt: null,
@@ -222,20 +267,14 @@ export class AgentManagerCore {
 
   async report() {
     const [tasks, memories] = await Promise.all([this.store.listTasks(), this.store.listMemories()]);
-    const approvals = [];
-    for (const task of tasks) {
-      for (const event of await this.store.getEvents(task.id)) {
-        // Events are summarized from the task ledger below; no sensitive payloads are emitted here.
-        void event;
-      }
-    }
+    const approvals = await this.store.listApprovals();
     const counts = Object.fromEntries(TASK_STATES.map(state => [state, tasks.filter(task => task.status === state).length]));
     return {
       generatedAt: this.now(),
       taskCounts: counts,
       totalTasks: tasks.length,
       memoryCounts: Object.fromEntries([...MEMORY_TYPES].map(type => [type, memories.filter(memory => memory.type === type && !memory.archivedAt).length])),
-      pendingApprovals: (await Promise.all([...this.store.approvals.keys()].map(id => this.store.getApproval(id)))).filter(item => item?.status === 'pending').length,
+      pendingApprovals: approvals.filter(item => item.status === 'pending').length,
       safety: {
         productionActionsEnabled: false,
         realPaymentsEnabled: false,
