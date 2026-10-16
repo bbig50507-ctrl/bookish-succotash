@@ -8,9 +8,10 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test:flow": "node test-flow.js",
+    "test:agent-core": "node --test agent-core.test.js",
     "monitor": "node monitor.js"
   },
-  "keywords": ["supabase", "booking", "claude"],
+  "keywords": ["supabase", "booking", "claude", "agent-manager"],
   "author": "PMBNB",
   "license": "MIT",
   "dependencies": {
