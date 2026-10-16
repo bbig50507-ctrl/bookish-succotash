@@ -221,7 +221,15 @@ export class AgentManagerCore {
     await this.store.saveApproval(approval);
     if (approval.taskId) {
       const task = await this.#requireTask(approval.taskId);
-      await this.#event(task.id, null, task.status, `approval_${decision}`, decidedBy, { approvalId: id, action: approval.action });
+      if (task.status === 'waiting_approval') {
+        await this.transitionTask(
+          task.id,
+          decision === 'approved' ? 'queued' : 'cancelled',
+          { actor: decidedBy, reason: `approval_${decision}:${approval.action}` },
+        );
+      } else {
+        await this.#event(task.id, null, task.status, `approval_${decision}`, decidedBy, { approvalId: id, action: approval.action });
+      }
     }
     return approval;
   }
